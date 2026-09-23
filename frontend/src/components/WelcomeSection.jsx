@@ -1,13 +1,18 @@
 import React from 'react';
-import { ArrowLeft, Sparkles, Calendar, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Sparkles, Calendar, ShieldCheck, Target, Award } from 'lucide-react';
 
-export default function WelcomeSection({ userName = "Production Admin", onBackHome }) {
+export default function WelcomeSection({ user, activePackage, loading, onBackHome }) {
   const todayDate = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
+
+  const userName = user?.name || "Nisrina Alifah";
+  const targetMajor = user?.targetMajor || "Pendidikan Dokter";
+  const targetUniversity = user?.targetUniversity || "Universitas Indonesia";
+  const packageName = activePackage?.title || "SNBT Masterclass 2026";
 
   return (
     <section style={{ marginBottom: '32px' }} className="animate-fade-in">
@@ -31,7 +36,7 @@ export default function WelcomeSection({ userName = "Production Admin", onBackHo
         </button>
 
         {/* Date & System Status Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -62,7 +67,7 @@ export default function WelcomeSection({ userName = "Production Admin", onBackHo
             color: '#065f46'
           }}>
             <ShieldCheck size={14} color="#059669" />
-            <span>LMS Core Live</span>
+            <span>Sistem Terhubung (Live)</span>
           </div>
         </div>
       </div>
@@ -90,9 +95,27 @@ export default function WelcomeSection({ userName = "Production Admin", onBackHo
         }} />
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: '720px' }}>
-          <div className="eyebrow-badge" style={{ marginBottom: '12px' }}>
-            <Sparkles size={12} />
-            <span>Workspace Pembelajaran Terpadu</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <div className="eyebrow-badge">
+              <Sparkles size={12} />
+              <span>Workspace Pembelajaran Terpadu</span>
+            </div>
+            {packageName && (
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '3px 10px',
+                borderRadius: '9999px',
+                background: '#e0e7ff',
+                color: '#4338ca',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}>
+                <Award size={12} />
+                <span>{packageName}</span>
+              </span>
+            )}
           </div>
           
           <h1 style={{
@@ -102,8 +125,21 @@ export default function WelcomeSection({ userName = "Production Admin", onBackHo
             letterSpacing: '-0.03em',
             marginBottom: '10px'
           }}>
-            Halo, {userName} 👋
+            {loading ? 'Memuat profil...' : `Halo, ${userName} 👋`}
           </h1>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '14px',
+            color: '#4f46e5',
+            fontWeight: 600,
+            marginBottom: '8px'
+          }}>
+            <Target size={16} />
+            <span>Target: {targetMajor} • {targetUniversity}</span>
+          </div>
 
           <p style={{
             fontSize: '15px',

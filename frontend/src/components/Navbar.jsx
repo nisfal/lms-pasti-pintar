@@ -16,7 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 
-export default function Navbar({ onOpenCatalog }) {
+export default function Navbar({ user, onOpenCatalog }) {
   const [bimbelOpen, setBimbelOpen] = useState(false);
   const [paketOpen, setPaketOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -25,6 +25,12 @@ export default function Navbar({ onOpenCatalog }) {
   const bimbelRef = useRef(null);
   const paketRef = useRef(null);
   const userRef = useRef(null);
+
+  const displayName = user?.name || "Nisrina Alifah";
+  const displayEmail = user?.email || "nisrina.alifah@student.id";
+  const displayRole = user?.role === 'admin' ? 'Verified Admin' : 'Siswa Aktif';
+  const displayAvatar = user?.avatar;
+  const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -350,23 +356,28 @@ export default function Navbar({ onOpenCatalog }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                background: displayAvatar ? 'transparent' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '13px',
-                fontWeight: 700
+                fontWeight: 700,
+                overflow: 'hidden'
               }}>
-                PA
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  initials
+                )}
               </div>
               <div style={{ textAlign: 'left', display: 'none' }} className="desktop-user-text">
                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>
-                  Production Admin
+                  {displayName}
                 </div>
                 <div style={{ fontSize: '10px', color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
                   <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
-                  Verified Admin
+                  {displayRole}
                 </div>
               </div>
               <ChevronDown size={14} color="#64748b" style={{ transform: userMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }} />
@@ -388,8 +399,8 @@ export default function Navbar({ onOpenCatalog }) {
                 animation: 'fadeInUp 200ms ease forwards'
               }}>
                 <div style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>Production Admin</div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>admin@pastipintar.id</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{displayName}</div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>{displayEmail}</div>
                 </div>
                 <div style={{ padding: '6px 0' }}>
                   <a href="#profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '13px', color: '#334155', borderRadius: '8px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>

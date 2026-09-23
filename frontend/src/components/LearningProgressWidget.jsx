@@ -5,48 +5,29 @@ import {
   FileText, 
   ArrowRight, 
   PackageOpen, 
-  AlertCircle,
   Sparkles,
-  TrendingUp,
+  Clock,
   Layers
 } from 'lucide-react';
 
-export default function LearningProgressWidget({ onOpenCatalog }) {
-  // State switcher to preview both states (Active Packages vs Empty State) as specified in PRD
-  const [hasActivePackages, setHasActivePackages] = useState(true);
+export default function LearningProgressWidget({ progressData, activePackage, loading, onOpenCatalog }) {
+  // Manual override toggle for PRD acceptance criteria testing
+  const [forceEmptyState, setForceEmptyState] = useState(false);
 
-  const activePackages = [
-    {
-      id: 'pkg-1',
-      name: 'Intensif UTBK-SNBT 2026 (Master Class)',
-      category: 'Persiapan Masuk PTN',
-      totalVideos: 35,
-      completedVideos: 24,
-      totalTryouts: 8,
-      completedTryouts: 6,
-      deadline: 'Berakhir 30 Juni 2026',
-      badge: 'Aktif'
-    },
-    {
-      id: 'pkg-2',
-      name: 'SKD Kedinasan STAN & IPDN 2026',
-      category: 'Sekolah Kedinasan',
-      totalVideos: 20,
-      completedVideos: 11,
-      totalTryouts: 5,
-      completedTryouts: 2,
-      deadline: 'Berakhir 15 Mei 2026',
-      badge: 'Aktif'
-    }
-  ];
+  // Check if user has an active package from backend
+  const hasRealPackage = Boolean(activePackage && activePackage.id && activePackage.status === 'Aktif');
+  const isDisplayingActive = hasRealPackage && !forceEmptyState;
 
-  // Calculate weighted progress: Video + Tryouts combined as requested
-  const calculateProgress = (completedVid, totalVid, completedTO, totalTO) => {
-    const totalItems = totalVid + totalTO;
-    if (totalItems === 0) return 0;
-    const completedItems = completedVid + completedTO;
-    return Math.round((completedItems / totalItems) * 100);
-  };
+  // Format expiry date
+  const validUntilFormatted = activePackage?.validUntil 
+    ? new Date(activePackage.validUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '31 Des 2026';
+
+  const completedVids = progressData?.completedVideos ?? 10;
+  const totalVids = progressData?.totalVideos ?? 14;
+  const progressPct = progressData?.percentage ?? Math.round((completedVids / totalVids) * 100);
+  const studyMins = progressData?.studyTimeMinutes ?? 465;
+  const recentVids = progressData?.recentVideos || [];
 
   return (
     <div className="double-bezel animate-fade-in delay-2" style={{ height: '100%' }}>
@@ -70,21 +51,21 @@ export default function LearningProgressWidget({ onOpenCatalog }) {
                 fontWeight: 700,
                 padding: '2px 8px',
                 borderRadius: '9999px',
-                background: hasActivePackages ? '#ecfdf5' : '#f1f5f9',
-                color: hasActivePackages ? '#059669' : '#64748b'
+                background: isDisplayingActive ? '#ecfdf5' : '#f1f5f9',
+                color: isDisplayingActive ? '#059669' : '#64748b'
               }}>
-                {hasActivePackages ? `${activePackages.length} Paket Berjalan` : 'Kosong'}
+                {loading ? 'Memuat...' : (isDisplayingActive ? 'Paket Aktif' : 'Kosong')}
               </span>
             </div>
             <p style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-              Dihitung dari kombinasi video materi & tryout terselesaikan
+              Dihitung dari kombinasi video materi & modul terselesaikan
             </p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Demo State Switcher */}
+            {/* PRD Acceptance Criteria Switcher */}
             <button
-              onClick={() => setHasActivePackages(!hasActivePackages)}
+              onClick={() => setForceEmptyState(!forceEmptyState)}
               style={{
                 fontSize: '11px',
                 padding: '4px 10px',
@@ -95,126 +76,169 @@ export default function LearningProgressWidget({ onOpenCatalog }) {
                 border: '1px solid #e2e8f0',
                 cursor: 'pointer'
               }}
-              title="Klik untuk menguji tampilan State Ada Paket vs Kosong"
+              title="Klik untuk menguji tampilan State Ada Paket vs Kosong sesuai PRD"
             >
-              Mode: {hasActivePackages ? 'Ada Paket' : 'State Kosong'}
+              Mode: {isDisplayingActive ? 'Ada Paket (Live)' : 'State Kosong (PRD)'}
             </button>
 
-            {hasActivePackages && (
-              <a
-                href="#semua-paket"
+            {isDisplayingActive && (
+              <button
+                onClick={onOpenCatalog}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
                   fontSize: '12px',
                   fontWeight: 700,
-                  color: '#4f46e5'
+                  color: '#4f46e5',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer'
                 }}
               >
-                Lihat semua
+                Lihat Paket
                 <ArrowRight size={13} />
-              </a>
+              </button>
             )}
           </div>
         </div>
 
         {/* Content Body */}
-        {hasActivePackages ? (
+        {loading ? (
+          /* SKELETON LOADING */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, padding: '12px 0' }}>
+            <div style={{ height: '24px', background: '#f1f5f9', borderRadius: '8px', width: '60%' }} />
+            <div style={{ height: '12px', background: '#f1f5f9', borderRadius: '6px', width: '100%' }} />
+            <div style={{ height: '80px', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }} />
+          </div>
+        ) : isDisplayingActive ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-            {activePackages.map((pkg) => {
-              const progressPct = calculateProgress(
-                pkg.completedVideos,
-                pkg.totalVideos,
-                pkg.completedTryouts,
-                pkg.totalTryouts
-              );
+            {/* Active Package Card from MySQL */}
+            <div
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '16px',
+                padding: '16px',
+                transition: 'all 200ms ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '12px',
+                marginBottom: '12px'
+              }}>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {activePackage?.category || 'SNBT / UTBK'}
+                  </span>
+                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                    {activePackage?.title || 'SNBT Masterclass 2026'}
+                  </h4>
+                </div>
 
-              return (
-                <div
-                  key={pkg.id}
-                  style={{
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '16px',
-                    padding: '16px',
-                    transition: 'all 200ms ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
-                >
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    marginBottom: '12px'
-                  }}>
-                    <div>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        {pkg.category}
-                      </span>
-                      <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
-                        {pkg.name}
-                      </h4>
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 800, color: '#4f46e5' }}>
-                        {progressPct}%
-                      </span>
-                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 500 }}>
-                        Selesai
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div style={{
-                    width: '100%',
-                    height: '8px',
-                    background: '#e2e8f0',
-                    borderRadius: '9999px',
-                    overflow: 'hidden',
-                    marginBottom: '12px'
-                  }}>
-                    <div style={{
-                      width: `${progressPct}%`,
-                      height: '100%',
-                      background: 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)',
-                      borderRadius: '9999px',
-                      transition: 'width 800ms cubic-bezier(0.32, 0.72, 0, 1)'
-                    }} />
-                  </div>
-
-                  {/* Metrics details: Video + Tryout */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                    fontSize: '11px',
-                    color: '#64748b'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <PlayCircle size={13} color="#4f46e5" />
-                        <strong>{pkg.completedVideos}/{pkg.totalVideos}</strong> Video
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <FileText size={13} color="#059669" />
-                        <strong>{pkg.completedTryouts}/{pkg.totalTryouts}</strong> Tryout
-                      </span>
-                    </div>
-
-                    <span style={{ color: '#94a3b8' }}>
-                      {pkg.deadline}
-                    </span>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#4f46e5' }}>
+                    {progressPct}%
+                  </span>
+                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 500 }}>
+                    Selesai
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Progress Bar */}
+              <div style={{
+                width: '100%',
+                height: '8px',
+                background: '#e2e8f0',
+                borderRadius: '9999px',
+                overflow: 'hidden',
+                marginBottom: '12px'
+              }}>
+                <div style={{
+                  width: `${progressPct}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)',
+                  borderRadius: '9999px',
+                  transition: 'width 800ms cubic-bezier(0.32, 0.72, 0, 1)'
+                }} />
+              </div>
+
+              {/* Metrics details: Video + Study Time + Expiry */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+                fontSize: '11px',
+                color: '#64748b'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <PlayCircle size={13} color="#4f46e5" />
+                    <strong>{completedVids}/{totalVids}</strong> Video Selesai
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={13} color="#059669" />
+                    <strong>{studyMins}</strong> Menit Belajar
+                  </span>
+                </div>
+
+                <span style={{ color: '#94a3b8' }}>
+                  Berlaku s/d {validUntilFormatted}
+                </span>
+              </div>
+            </div>
+
+            {/* List of Recent Modules from MongoDB */}
+            {recentVids.length > 0 && (
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                  Modul Pembelajaran Terakhir
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {recentVids.map((vid) => (
+                    <div 
+                      key={vid.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 12px',
+                        background: '#ffffff',
+                        border: '1px solid #f1f5f9',
+                        borderRadius: '10px',
+                        fontSize: '12px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckCircle2 size={15} color="#10b981" />
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{vid.title}</div>
+                          <div style={{ fontSize: '10px', color: '#64748b' }}>{vid.subject} • {vid.duration}</div>
+                        </div>
+                      </div>
+                      <span style={{
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        color: '#059669',
+                        background: '#ecfdf5',
+                        padding: '2px 6px',
+                        borderRadius: '4px'
+                      }}>
+                        Tuntas
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* EMPTY STATE (As required in PRD) */

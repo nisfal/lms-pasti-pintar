@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+require('dotenv').config();
 
 const connectMongo = async () => {
   try {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/lms_db';
+    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/lms_pasti_pintar';
     await mongoose.connect(uri);
     console.log('MongoDB connected successfully');
   } catch (error) {

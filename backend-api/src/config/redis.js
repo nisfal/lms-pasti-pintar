@@ -1,10 +1,12 @@
 const redis = require('redis');
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+require('dotenv').config();
 
 const client = redis.createClient({
   socket: {
     host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379
+    port: parseInt(process.env.REDIS_PORT || '6379', 10)
   }
 });
 
